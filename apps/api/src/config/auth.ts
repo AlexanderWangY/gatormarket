@@ -4,6 +4,7 @@ import { Pool } from "pg";
 export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
+    autoSignIn: false,
     requireEmailVerification: process.env.NODE_ENV === "production",
   },
   database: new Pool({
@@ -13,5 +14,9 @@ export const auth = betterAuth({
   }),
   advanced: {
     cookiePrefix: "gatormarket",
-  }
+  },
+  trustedOrigins:
+    process.env.NODE_ENV === "production"
+      ? [process.env.CLIENT_URL as string]
+      : ["http://localhost:3000"],
 });

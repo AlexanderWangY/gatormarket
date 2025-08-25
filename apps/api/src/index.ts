@@ -11,7 +11,7 @@ app.use(logger);
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN ?? "*",
+    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

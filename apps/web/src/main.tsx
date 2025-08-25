@@ -9,7 +9,7 @@ import { routeTree } from './routeTree.gen'
 
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
-
+import { Toaster } from 'sonner'
 // Create a new router instance
 
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext()
@@ -17,6 +17,7 @@ const router = createRouter({
   routeTree,
   context: {
     ...TanStackQueryProviderContext,
+    auth: undefined,
   },
   defaultPreload: 'intent',
   scrollRestoration: true,
@@ -31,6 +32,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
+const InnerApp = () => {
+  return (
+    <RouterProvider
+      router={router}
+      context={{ ...TanStackQueryProviderContext }}
+    />
+  )
+}
+
 // Render the app
 const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
@@ -38,7 +48,8 @@ if (rootElement && !rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-        <RouterProvider router={router} />
+        <InnerApp />
+        <Toaster richColors />
       </TanStackQueryProvider.Provider>
     </StrictMode>,
   )
