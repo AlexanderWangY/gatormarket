@@ -1,22 +1,12 @@
 import { getSession } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
-import {
-  createFileRoute,
-  Link,
-  Outlet,
-  redirect,
-  useLocation,
-} from '@tanstack/react-router'
+import { Link, Outlet } from '@tanstack/react-router'
+import { createFileRoute, useLocation } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/markets')({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await getSession()
-    if (!session) {
-      throw redirect({
-        to: '/login',
-      })
-    }
 
     return { session }
   },

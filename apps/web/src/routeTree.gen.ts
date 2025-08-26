@@ -9,13 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MarketsRouteRouteImport } from './routes/markets/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MarketsIndexRouteImport } from './routes/markets/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as MarketsMarketIdIndexRouteImport } from './routes/markets/$marketId/index'
 
+const MarketsRouteRoute = MarketsRouteRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -30,9 +39,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketsIndexRoute = MarketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketsRouteRoute,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAccountRoute = DashboardAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
@@ -45,52 +64,96 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const MarketsMarketIdIndexRoute = MarketsMarketIdIndexRouteImport.update({
+  id: '/$marketId/',
+  path: '/$marketId/',
+  getParentRoute: () => MarketsRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/markets': typeof MarketsRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/markets/': typeof MarketsIndexRoute
+  '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/markets': typeof MarketsIndexRoute
+  '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
+  '/markets': typeof MarketsRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/markets/': typeof MarketsIndexRoute
+  '/markets/$marketId/': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/signup' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/markets'
+    | '/login'
+    | '/signup'
+    | '/dashboard/account'
+    | '/dashboard/'
+    | '/markets/'
+    | '/markets/$marketId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/dashboard'
+  to:
+    | '/'
+    | '/login'
+    | '/signup'
+    | '/dashboard/account'
+    | '/dashboard'
+    | '/markets'
+    | '/markets/$marketId'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/dashboard'
+    | '/markets'
     | '/_auth/login'
     | '/_auth/signup'
+    | '/dashboard/account'
     | '/dashboard/'
+    | '/markets/'
+    | '/markets/$marketId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
+  MarketsRouteRoute: typeof MarketsRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/markets': {
+      id: '/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof MarketsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -112,11 +175,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/markets/': {
+      id: '/markets/'
+      path: '/'
+      fullPath: '/markets/'
+      preLoaderRoute: typeof MarketsIndexRouteImport
+      parentRoute: typeof MarketsRouteRoute
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/account': {
+      id: '/dashboard/account'
+      path: '/account'
+      fullPath: '/dashboard/account'
+      preLoaderRoute: typeof DashboardAccountRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/_auth/signup': {
@@ -132,6 +209,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/markets/$marketId/': {
+      id: '/markets/$marketId/'
+      path: '/$marketId'
+      fullPath: '/markets/$marketId'
+      preLoaderRoute: typeof MarketsMarketIdIndexRouteImport
+      parentRoute: typeof MarketsRouteRoute
     }
   }
 }
@@ -151,10 +235,12 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
 )
 
 interface DashboardRouteRouteChildren {
+  DashboardAccountRoute: typeof DashboardAccountRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardAccountRoute: DashboardAccountRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
@@ -162,10 +248,25 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
   DashboardRouteRouteChildren,
 )
 
+interface MarketsRouteRouteChildren {
+  MarketsIndexRoute: typeof MarketsIndexRoute
+  MarketsMarketIdIndexRoute: typeof MarketsMarketIdIndexRoute
+}
+
+const MarketsRouteRouteChildren: MarketsRouteRouteChildren = {
+  MarketsIndexRoute: MarketsIndexRoute,
+  MarketsMarketIdIndexRoute: MarketsMarketIdIndexRoute,
+}
+
+const MarketsRouteRouteWithChildren = MarketsRouteRoute._addFileChildren(
+  MarketsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
+  MarketsRouteRoute: MarketsRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

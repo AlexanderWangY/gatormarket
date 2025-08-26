@@ -1,9 +1,12 @@
 -- +goose Up
 -- +goose StatementBegin
+
+CREATE TYPE outcome_option AS ENUM ('YES', 'NO');
+
 CREATE TABLE outcomes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     market_id INT NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
-    label TEXT NOT NULL CHECK (label IN ('YES', 'NO')),
+    outcome outcome_option NOT NULL,
     shares NUMERIC(20,10) NOT NULL DEFAULT 0,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -11,7 +14,7 @@ CREATE TABLE outcomes (
 
     -- Add constraint to ensure never negative securities
     CONSTRAINT chk_shares_nonnegative CHECK (shares >= 0),
-    UNIQUE(market_id, label)
+    UNIQUE(market_id, outcome)
 );
 
 CREATE INDEX idx_outcomes_market_id ON outcomes(market_id);
@@ -25,6 +28,8 @@ EXECUTE PROCEDURE update_updated_at_column();
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TYPE IF EXISTS outcome_option;
+
 DROP INDEX IF EXISTS idx_outcomes_market_id;
 DROP INDEX IF EXISTS idx_outcomes_shares;
 

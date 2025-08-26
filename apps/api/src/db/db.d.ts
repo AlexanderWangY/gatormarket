@@ -15,6 +15,8 @@ export type MarketStatus = "active" | "cancelled" | "inactive" | "settled";
 
 export type Numeric = ColumnType<string, number | string, number | string>;
 
+export type OutcomeOption = "NO" | "YES";
+
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Account {
@@ -48,6 +50,7 @@ export interface Markets {
   exam_name: string;
   exam_start_time: Timestamp;
   id: Generated<number>;
+  liquidity: Generated<number>;
   resolved_outcome_id: string | null;
   status: Generated<MarketStatus>;
   title: string;
@@ -57,18 +60,18 @@ export interface Markets {
 export interface Outcomes {
   created_at: Generated<Timestamp>;
   id: Generated<string>;
-  label: string;
   market_id: number;
+  outcome: OutcomeOption;
   shares: Generated<Numeric>;
   updated_at: Generated<Timestamp>;
 }
 
 export interface Positions {
-  average_price_per_share: Numeric;
+  average_price_per_share: Int8;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
   outcome_id: string;
-  realized_pnl: Generated<Numeric>;
+  realized_pnl: Generated<Int8>;
   shares: Numeric;
   updated_at: Generated<Timestamp>;
   user_id: string;
@@ -86,18 +89,18 @@ export interface Session {
 }
 
 export interface Trades {
-  cost: Numeric;
+  cost: Int8;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
   outcome_id: string;
-  price_per_share: Numeric;
+  price_per_share: Int8;
   shares: Numeric;
   trade_type: string;
   user_id: string;
 }
 
 export interface Transactions {
-  amount: Numeric;
+  amount: Int8;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
   related_outcome_id: string | null;
@@ -127,10 +130,10 @@ export interface Verification {
 }
 
 export interface Wallets {
-  balance: Generated<Numeric>;
+  balance: Generated<Int8>;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
-  locked_balance: Generated<Numeric>;
+  locked_balance: Generated<Int8>;
   updated_at: Generated<Timestamp>;
   user_id: string;
 }
