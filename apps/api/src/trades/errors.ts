@@ -11,3 +11,10 @@ export class InsufficientFundsError extends Error {
     this.name = "InsufficientFundsError";
   }
 }
+
+export class NoExistingPositionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NoExistingPositionError";
+  }
+}

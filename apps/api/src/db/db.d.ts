@@ -11,17 +11,13 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 
 export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
-export type MarketStatus = "active" | "cancelled" | "inactive" | "settled";
-
 export type Numeric = ColumnType<string, number | string, number | string>;
 
-export type OutcomeOption = "NO" | "YES";
+export type OutcomeResultType = "NO" | "YES";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export type TradeTypeEnum = "BUY" | "SELL";
-
-export type TransactionTypeEnum = "ADMIN_ADJUSTMENT" | "ADMIN_RESET" | "BUY" | "SELL" | "SETTLEMENT";
+export type TradeType = "BUY" | "SELL";
 
 export interface Account {
   accessToken: string | null;
@@ -47,35 +43,24 @@ export interface GooseDbVersion {
 }
 
 export interface Markets {
-  course_code: string;
+  closes_at: Timestamp;
   created_at: Generated<Timestamp>;
-  description: string | null;
-  exam_end_time: Timestamp;
-  exam_name: string;
-  exam_start_time: Timestamp;
   id: Generated<number>;
-  liquidity: Generated<number>;
-  resolved_outcome_id: string | null;
-  status: Generated<MarketStatus>;
-  title: string;
+  liquidity: Generated<Int8>;
+  no_shares: Generated<Numeric>;
+  outcome: OutcomeResultType | null;
+  question: string;
+  resolved: Generated<boolean>;
+  semester: string;
   updated_at: Generated<Timestamp>;
-}
-
-export interface Outcomes {
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  market_id: number;
-  outcome: OutcomeOption;
-  shares: Generated<Numeric>;
-  updated_at: Generated<Timestamp>;
+  yes_shares: Generated<Numeric>;
 }
 
 export interface Positions {
-  average_price_per_share: Int8;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
-  outcome_id: string;
-  realized_pnl: Generated<Int8>;
+  market_id: number;
+  outcome: OutcomeResultType;
   shares: Numeric;
   updated_at: Generated<Timestamp>;
   user_id: string;
@@ -93,28 +78,18 @@ export interface Session {
 }
 
 export interface Trades {
-  cost: Int8;
+  amount_cents: Int8;
   created_at: Generated<Timestamp>;
   id: Generated<string>;
-  outcome_id: string;
-  price_per_share: Int8;
+  market_id: number;
+  outcome: OutcomeResultType;
   shares: Numeric;
-  trade_type: TradeTypeEnum;
-  user_id: string;
-}
-
-export interface Transactions {
-  amount: Int8;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  related_outcome_id: string | null;
-  trade_id: string | null;
-  transaction_type: TransactionTypeEnum;
-  updated_at: Generated<Timestamp>;
+  trade_type: TradeType;
   user_id: string;
 }
 
 export interface User {
+  balance_cents: Generated<Int8>;
   createdAt: Generated<Timestamp>;
   email: string;
   emailVerified: boolean;
@@ -133,25 +108,13 @@ export interface Verification {
   value: string;
 }
 
-export interface Wallets {
-  balance: Generated<Int8>;
-  created_at: Generated<Timestamp>;
-  id: Generated<string>;
-  locked_balance: Generated<Int8>;
-  updated_at: Generated<Timestamp>;
-  user_id: string;
-}
-
 export interface DB {
   account: Account;
   goose_db_version: GooseDbVersion;
   markets: Markets;
-  outcomes: Outcomes;
   positions: Positions;
   session: Session;
   trades: Trades;
-  transactions: Transactions;
   user: User;
   verification: Verification;
-  wallets: Wallets;
 }

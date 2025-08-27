@@ -62,11 +62,14 @@ function RouteComponent() {
         onError: (error) => {
           toast.error(
             error.error.message || 'Failed to sign up. Please try again.',
+            { closeButton: true },
           )
         },
         onSuccess: () => {
-          toast.success('Account created successfully! Please log in.', {})
-          router.navigate({ to: '/login'})
+          toast.success('Account created successfully! Please log in.', {
+            closeButton: true,
+          })
+          router.navigate({ to: '/login' })
         },
         onRequest: () => {
           setLoading(true)

@@ -1,22 +1,22 @@
 import Navbar from '@/components/Navbar'
 import { getSession } from '@/lib/auth-client'
-import { cn } from '@/lib/utils'
-import { Link, Outlet } from '@tanstack/react-router'
-import { createFileRoute, useLocation } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/markets')({
+export const Route = createFileRoute('/_protected')({
   component: RouteComponent,
   beforeLoad: async () => {
     const session = await getSession()
+    if (!session) {
+      throw redirect({
+        to: '/login',
+      })
+    }
 
     return { session }
   },
 })
 
 function RouteComponent() {
-  const path = useLocation({
-    select: (location) => location.pathname,
-  })
   return (
     <>
       <Navbar />

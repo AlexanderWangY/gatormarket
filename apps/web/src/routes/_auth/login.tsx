@@ -46,11 +46,11 @@ function RouteComponent() {
       },
       {
         onError: (error) => {
-          toast.error(error.error.message || 'Something went wrong')
+          toast.error(error.error.message || 'Something went wrong', { closeButton: true })
         },
         onSuccess: () => {
-          toast.success('Successfully logged in')
-          router.navigate({ to: '/dashboard' })
+          toast.success('Successfully logged in', { closeButton: true })
+          router.navigate({ to: '/account' })
         },
         onRequest: () => {
           setLoading(true)

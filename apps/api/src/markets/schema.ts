@@ -4,11 +4,12 @@ import { z } from "zod";
 // Enums & Common Types
 // --------------------
 export const MarketStatusEnum = z.enum([
-  "active",
-  "inactive",
-  "settled",
-  "cancelled",
+  "open",
+  "closed",
+  "resolved",
 ]);
+
+export type MarketStatus = z.infer<typeof MarketStatusEnum>;
 
 // Single market object
 export const MarketSchema = z.object({
@@ -63,7 +64,7 @@ export const CreateMarketBodySchema = z.object({
   exam_name: z.string(),
   exam_start_time: z.string(),
   exam_end_time: z.string(),
-  status: MarketStatusEnum.optional().default("active"),
+  status: MarketStatusEnum.optional().default("open"),
 });
 
 export const CreateMarketResponseSchema = MarketSchema;

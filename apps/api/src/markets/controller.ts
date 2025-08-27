@@ -1,86 +1,71 @@
 import type { Request, Response } from "express";
 import { GetMarketsQuerySchema } from "./schema.js";
-import { db } from "../db/index.js"; // Node automatically resolves index.js
-import { getMarketPrices, getProbabilityOfOutcome } from "../lmsr/index.js";
+import { db } from "../db/index.js";
+import { resolveMarketStatusQueryBuilder } from "./utils.js";
+import { MarketService } from "./service.js";
 
-export const getMarkets = async (req: Request, res: Response) => {
-  // Parse query parameters
-  const params = req.query;
-
-  const { data, success, error } = GetMarketsQuerySchema.safeParse(params);
-  if (!success) {
-    return res.status(400).json({ error: error.message });
-  }
-
-  try {
-    let query = db.selectFrom("markets").selectAll();
-
-    if (data.search) {
-      query = query.where((eb) =>
-        eb.or([
-          eb("title", "like", `%${data.search}%`),
-          eb("course_code", "like", `%${data.search}%`),
-          eb("exam_name", "like", `%${data.search}%`),
-        ])
-      );
+export class MarketController {
+  static async getMarkets(req: Request, res: Response) {
+    // Parse query params
+    const { data, success, error } = GetMarketsQuerySchema.safeParse(req.query);
+    if (!success) {
+      return res.status(400).json({ error: error.message });
     }
 
-    if (data.status) {
-      query = query.where("status", "=", data.status);
-    }
+    try {
+      const { items, total } = await MarketService.fetchMarkets(data);
 
-    if (data.sortOrder) {
-      query = query.orderBy("created_at", data.sortOrder);
-    }
-
-    const markets = await query
-      .limit(data.limit)
-      .offset((data.page - 1) * data.limit)
-      .execute();
-
-    // Return the markets in the response
-    return res.status(200).json({
-      items: markets, // Replace with actual markets
-      page: data.page,
-      limit: data.limit,
-    });
-  } catch (err) {
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
-
-export const getMarketOutcomes = async (req: Request, res: Response) => {
-  const marketId = Number(req.params.id);
-  if (isNaN(marketId)) {
-    return res.status(400).json({ error: "Invalid market ID" });
-  }
-
-  try {
-    const outcomes = await db
-      .selectFrom("outcomes")
-      .selectAll()
-      .where("market_id", "=", marketId)
-      .execute();
-
-    const { yesPrice, noPrice } =  await getMarketPrices(marketId)
-
-    const outcomesWithProbability = outcomes.map((outcome) => {
-      console.log("Calculating probability for outcome:", outcome.outcome);
-      let probability = 0;
-      if (outcome.outcome === "YES") {
-        probability = yesPrice;
-      } else if (outcome.outcome === "NO") {
-        probability = noPrice;
+      return res.json({
+        items,
+        total: total,
+        page: data.page,
+        limit: data.limit,
+      });
+    } catch (e) {
+      console.error(e);
+      if (e instanceof Error) {
+        return res.status(500).json({ error: e.message });
       }
-      return { ...outcome, probability };
-    });
 
-    console.log("HERE")
-
-    return res.status(200).json({ items: outcomesWithProbability });
-  } catch (err) {
-    console.error(err);
-
-    return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
-};
+
+  static async getMarketById(req: Request, res: Response) {
+    if (!req.params.id) {
+      return res.status(400).json({ error: "Market ID is required" });
+    }
+
+    const marketId = Number(req.params.id);
+
+    try {
+      const market = await MarketService.fetchMarketById(marketId);
+      return res.json(market);
+    } catch (e) {
+      if (e instanceof Error) {
+        return res.status(500).json({ error: e.message });
+      }
+
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  static async getMarketPrices(req: Request, res: Response) {
+    if (!req.params.id) {
+      return res.status(400).json({ error: "Market ID is required" });
+    }
+
+    const marketId = Number(req.params.id);
+
+    try {
+      const prices = await MarketService.fetchMarketPricesById(marketId);
+      return res.json(prices);
+    } catch (e) {
+      if (e instanceof Error) {
+        return res.status(500).json({ error: e.message });
+      }
+
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+}

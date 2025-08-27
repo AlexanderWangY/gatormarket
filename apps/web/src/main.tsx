@@ -10,6 +10,7 @@ import { routeTree } from './routeTree.gen'
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 import { Toaster } from 'sonner'
+import { ThemeProvider } from './components/theme-provider.tsx'
 // Create a new router instance
 
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext()
@@ -46,12 +47,15 @@ const rootElement = document.getElementById('app')
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
-    <StrictMode>
-      <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-        <InnerApp />
-        <Toaster richColors />
-      </TanStackQueryProvider.Provider>
-    </StrictMode>,
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <StrictMode>
+        <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+          <InnerApp />
+          <Toaster richColors />
+        </TanStackQueryProvider.Provider>
+      </StrictMode>
+      ,
+    </ThemeProvider>,
   )
 }
 

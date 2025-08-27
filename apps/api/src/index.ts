@@ -4,9 +4,9 @@ import { auth } from "./config/auth.js";
 import cors from "cors";
 import { logger } from "./config/logger.js";
 import marketRouter from "./markets/router.js";
-import walletRouter from "./wallets/router.js";
 import type { Session, User } from "better-auth";
 import tradesRouter from "./trades/router.js";
+import portfoliosRouter from "./portfolios/router.js";
 
 declare global {
   namespace Express {
@@ -37,8 +37,8 @@ app.get("/", (req, res) => {
 
 app.use(express.json());
 app.use("/markets", marketRouter);
-app.use("/wallets", walletRouter);
-app.use("/", tradesRouter)
+app.use("/trades", tradesRouter)
+app.use("/portfolios", portfoliosRouter)
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

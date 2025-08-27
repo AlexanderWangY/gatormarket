@@ -1,127 +1,203 @@
 import { sql } from "kysely";
 import { db } from "../db/index.js";
-import { getNumberOfSharesToBuy } from "../lmsr/index.js";
-import { InsufficientFundsError, InvalidShareAmountError } from "./errors.js";
+import { LSMR } from "../lmsr/index.js";
+import { InsufficientFundsError, NoExistingPositionError } from "./errors.js";
+import type { MakeBuyTradeBody, MakeSellTradeBody } from "./schema.js";
 
-export const buyOutcome = async (
-  marketId: number,
-  outcomeId: string,
-  dollars: number,
-  userId: string
-) => {
-  // Convert dollars to cents
-  const cents = Math.round(dollars * 100);
+export class TradesService {
+  static async executeBuyTrade(params: MakeBuyTradeBody, userId: string) {
+    // First start a database transaction
+    return db.transaction().execute(async (trx) => {
+      // Lock market row for update
+      const market = await trx
+        .selectFrom("markets")
+        .selectAll()
+        .where("id", "=", params.marketId)
+        .forUpdate()
+        .executeTakeFirstOrThrow();
 
-  // Create trade in database
-  return await db.transaction().execute(async (trx) => {
-    console.log("Got to wallet lock");
-    const wallet = await trx
-      .selectFrom("wallets")
-      .select(["balance", "locked_balance"])
-      .where("user_id", "=", userId)
-      .forUpdate()
-      .executeTakeFirstOrThrow();
+      // Lock user row for update
+      const user = await trx
+        .selectFrom("user")
+        .selectAll()
+        .where("id", "=", userId)
+        .forUpdate()
+        .executeTakeFirstOrThrow();
 
-    const availableBalance =
-      Number(wallet.balance) - Number(wallet.locked_balance);
+      // Check if user has sufficient balance
 
-    if (availableBalance < cents) {
-      throw new InsufficientFundsError(
-        "Insufficient funds to complete the purchase"
+      if (Number(user.balance_cents) < params.amount_cents) {
+        throw new InsufficientFundsError("Insufficient funds for this trade");
+      }
+
+      const qYes = Number(market.yes_shares);
+      const qNo = Number(market.no_shares);
+      const b = Number(market.liquidity);
+
+      // Calculate number of shares to buy
+      const sharesDelta = LSMR.sharesToBuy(
+        qYes,
+        qNo,
+        b,
+        params.amount_cents,
+        params.outcome
       );
-    }
 
-    console.log("Got to outcome lock");
+      // Update market shares
+      const newYesShares = params.outcome === "YES" ? qYes + sharesDelta : qYes;
+      const newNoShares = params.outcome === "NO" ? qNo + sharesDelta : qNo;
 
-    const outcome = await trx
-      .selectFrom("outcomes")
-      .select(["id", "outcome", "shares"])
-      .where("id", "=", outcomeId)
-      .forUpdate()
-      .executeTakeFirstOrThrow();
+      await trx
+        .updateTable("markets")
+        .set({
+          yes_shares: newYesShares,
+          no_shares: newNoShares,
+        })
+        .where("id", "=", params.marketId)
+        .execute();
 
-    // First, calculate the number of shares to buy based on the current price
-    const amountOfShares = await getNumberOfSharesToBuy(
-      outcome.outcome,
-      marketId,
-      cents,
-      trx
-    );
+      // Deduct user balance
+      const newBalance = Number(user.balance_cents) - params.amount_cents;
+      await trx
+        .updateTable("user")
+        .set({ balance_cents: newBalance })
+        .where("id", "=", userId)
+        .execute();
 
-    if (!amountOfShares || amountOfShares <= 0) {
-      throw new InvalidShareAmountError("Calculated share amount is invalid");
-    }
-    // Then, insert the trade into the trades table
-    console.log("Got to trade");
-    const newTrade = await trx
-      .insertInto("trades")
-      .values({
-        user_id: userId,
-        outcome_id: outcomeId,
-        shares: amountOfShares,
-        price_per_share: Math.round(cents / amountOfShares),
-        trade_type: "BUY",
-        cost: cents,
-      })
-      .returningAll()
-      .executeTakeFirst();
-    // Afterwards, update the shares in the outcomes table
-    console.log("Got to outcome");
-    await trx
-      .updateTable("outcomes")
-      .set({
-        shares: sql`shares + ${amountOfShares}::NUMERIC`,
-      })
-      .where("id", "=", outcomeId)
-      .execute();
+      // Record the trade
+      const trade = await trx
+        .insertInto("trades")
+        .values({
+          user_id: userId,
+          market_id: params.marketId,
+          trade_type: "BUY",
+          outcome: params.outcome,
+          shares: sharesDelta,
+          amount_cents: params.amount_cents,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    // Then, upsert user's position
-    console.log("Got to position");
-    await trx
-      .insertInto("positions")
-      .values({
-        user_id: userId,
-        outcome_id: outcomeId,
-        shares: amountOfShares,
-        average_price_per_share: Math.floor(cents / amountOfShares),
-      })
-      .onConflict((oc) =>
-        oc.columns(["user_id", "outcome_id"]).doUpdateSet((eb) => ({
-          shares: sql`"positions"."shares" + ${amountOfShares}`,
-          average_price_per_share: sql`
-          FLOOR(
-            ("positions"."shares" * "positions"."average_price_per_share"
-              + ${amountOfShares}::NUMERIC * ${Math.floor(cents / amountOfShares)}::NUMERIC)
-            / ("positions"."shares" + ${amountOfShares}::NUMERIC)
-          )
-        `,
-        }))
-      )
-      .returning(["user_id", "outcome_id", "shares", "average_price_per_share"])
-      .execute();
+      // Upsert user market position
+      await trx
+        .insertInto("positions")
+        .values({
+          user_id: userId,
+          market_id: params.marketId,
+          shares: trade.shares,
+          outcome: trade.outcome,
+        })
+        .onConflict((oc) =>
+          oc.columns(["market_id", "user_id", "outcome"]).doUpdateSet({
+            shares: sql`positions.shares + ${trade.shares}`,
+          })
+        )
+        .execute();
 
-    // Then create new transaction record
-    console.log("Got to transaction");
+      return trade;
+    });
+  }
 
-    await trx
-      .insertInto("transactions")
-      .values({
-        user_id: userId,
-        amount: -cents,
-        transaction_type: "BUY",
-      })
-      .execute();
+  static async executeSellTrade(params: MakeSellTradeBody, userId: string) {
+    return db.transaction().execute(async (trx) => {
+      const market = await trx
+        .selectFrom("markets")
+        .selectAll()
+        .where("id", "=", params.marketId)
+        .forUpdate()
+        .executeTakeFirstOrThrow();
 
-    // Finally update user wallet's locked balance
-    await trx
-      .updateTable("wallets")
-      .set({
-        locked_balance: sql`locked_balance + ${cents}`,
-      })
-      .where("user_id", "=", userId)
-      .execute();
+      const user = await trx
+        .selectFrom("user")
+        .selectAll()
+        .where("id", "=", userId)
+        .forUpdate()
+        .executeTakeFirstOrThrow();
 
-    // Return the trade details
-    return newTrade;
-  });
-};
+      const position = await trx
+        .selectFrom("positions")
+        .selectAll()
+        .where("user_id", "=", userId)
+        .where("market_id", "=", params.marketId)
+        .where("outcome", "=", params.outcome)
+        .forUpdate()
+        .executeTakeFirst();
+
+      if (!position) {
+        throw new NoExistingPositionError("No existing position to sell from");
+      }
+
+      if (Number(position.shares) < params.shares) {
+        throw new InsufficientFundsError("Insufficient shares to sell");
+      }
+
+      // Calculate sale value
+      const qYes = Number(market.yes_shares);
+      const qNo = Number(market.no_shares);
+      const b = Number(market.liquidity);
+
+      const saleValueCents = LSMR.sellSharesValue(
+        qYes,
+        qNo,
+        b,
+        params.shares,
+        params.outcome
+      );
+
+      // Update market shares
+
+      const newYesShares =
+        params.outcome === "YES" ? qYes - params.shares : qYes;
+      const newNoShares = params.outcome === "NO" ? qNo - params.shares : qNo;
+
+      await trx
+        .updateTable("markets")
+        .set({
+          yes_shares: newYesShares,
+          no_shares: newNoShares,
+        })
+        .where("id", "=", params.marketId)
+        .execute();
+
+      // Update or delete user position
+      const remainingShares = Number(position.shares) - params.shares;
+      if (remainingShares > 0) {
+        await trx
+          .updateTable("positions")
+          .set({ shares: remainingShares })
+          .where("id", "=", position.id)
+          .execute();
+      } else {
+        await trx
+          .deleteFrom("positions")
+          .where("id", "=", position.id)
+          .execute();
+      }
+
+      const newUserBalance = Math.round(
+        Number(user.balance_cents) + saleValueCents
+      );
+
+      await trx
+        .updateTable("user")
+        .set({ balance_cents: newUserBalance })
+        .where("id", "=", userId)
+        .execute();
+
+      const trade = await trx
+        .insertInto("trades")
+        .values({
+          user_id: userId,
+          market_id: params.marketId,
+          trade_type: "SELL",
+          outcome: params.outcome,
+          shares: params.shares,
+          amount_cents: Math.round(saleValueCents),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+      return trade;
+    });
+  }
+}

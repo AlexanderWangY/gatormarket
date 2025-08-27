@@ -1,55 +1,41 @@
 import type { Request, Response } from "express";
 import { MakeTradeBodySchema } from "./schema.js";
-import { buyOutcome } from "./service.js";
-import { InsufficientFundsError, InvalidShareAmountError } from "./errors.js";
+import { NoResultError } from "kysely";
+import { TradesService } from "./service.js";
 
-export const makeTrade = async (req: Request, res: Response) => {
-  // Get market ID from URL parameters
-  const marketId = Number(req.params.id);
-  const userId = req.auth?.user.id;
-
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  if (isNaN(marketId)) {
-    return res.status(400).json({ error: "Invalid market ID" });
-  }
-
-  // Validate request body
-  const { success, data, error } = MakeTradeBodySchema.safeParse(req.body);
-  if (!success) {
-    return res.status(400).json({ error: error.message });
-  }
-
-  try {
-    if (data.type === "BUY") {
-      const newTrade = await buyOutcome(
-        marketId,
-        data.outcomeId,
-        data.dollars,
-        userId
-      );
-
-      return res.status(200).json({
-        message: "Trade succeeded",
-        marketId,
-        tradeDetails: newTrade,
-      });
+export class TradesController {
+  static async createTrade(req: Request, res: Response) {
+    // Get user ID from context
+    const userId = req.auth?.user.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    return res.status(200).json({
-      message: "Got here!",
-    });
-  } catch (err) {
-    if (err instanceof InvalidShareAmountError) {
-      return res.status(400).json({ error: err.message });
-    } else if (err instanceof InsufficientFundsError) {
-      return res.status(400).json({ error: err.message });
-    } else if (err instanceof Error) {
-      return res.status(500).json({ error: err.message });
+    // Parse body
+    const { data, success, error } = MakeTradeBodySchema.safeParse(req.body);
+    if (!success) {
+      return res.status(400).json({ error: error.message });
     }
 
-    return res.status(500).json({ error: "Internal server error" });
+    try {
+      if (data.type === "BUY") {
+        const trade = await TradesService.executeBuyTrade(data, userId);
+        return res.status(201).json(trade);
+      } else if (data.type === "SELL") {
+        const trade = await TradesService.executeSellTrade(data, userId);
+        return res.status(201).json(trade);
+      }
+    } catch (e) {
+      console.error(e);
+      if (e instanceof NoResultError) {
+        return res.status(404).json({ error: "Market not found" });
+      }
+
+      if (e instanceof Error) {
+        return res.status(500).json({ error: e.message });
+      }
+
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
-};
+}

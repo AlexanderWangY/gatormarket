@@ -11,14 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MarketsRouteRouteImport } from './routes/markets/route'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as ProtectedRouteRouteImport } from './routes/_protected/route'
+import { Route as MainRouteRouteImport } from './routes/_main/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MarketsIndexRouteImport } from './routes/markets/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
+import { Route as MainLeaderboardRouteImport } from './routes/_main/leaderboard'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as MarketsMarketIdIndexRouteImport } from './routes/markets/$marketId/index'
+import { Route as ProtectedAccountIndexRouteImport } from './routes/_protected/account/index'
 
 const MarketsRouteRoute = MarketsRouteRouteImport.update({
   id: '/markets',
@@ -28,6 +32,14 @@ const MarketsRouteRoute = MarketsRouteRouteImport.update({
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedRouteRoute = ProtectedRouteRouteImport.update({
+  id: '/_protected',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MainRouteRoute = MainRouteRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRouteRoute = AuthRouteRouteImport.update({
@@ -54,6 +66,11 @@ const DashboardAccountRoute = DashboardAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const MainLeaderboardRoute = MainLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => MainRouteRoute,
+} as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -69,6 +86,11 @@ const MarketsMarketIdIndexRoute = MarketsMarketIdIndexRouteImport.update({
   path: '/$marketId/',
   getParentRoute: () => MarketsRouteRoute,
 } as any)
+const ProtectedAccountIndexRoute = ProtectedAccountIndexRouteImport.update({
+  id: '/account/',
+  path: '/account/',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -76,31 +98,39 @@ export interface FileRoutesByFullPath {
   '/markets': typeof MarketsRouteRouteWithChildren
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/leaderboard': typeof MainLeaderboardRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/markets/': typeof MarketsIndexRoute
+  '/account': typeof ProtectedAccountIndexRoute
   '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof AuthLoginRoute
   '/signup': typeof AuthSignupRoute
+  '/leaderboard': typeof MainLeaderboardRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard': typeof DashboardIndexRoute
   '/markets': typeof MarketsIndexRoute
+  '/account': typeof ProtectedAccountIndexRoute
   '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
+  '/_main': typeof MainRouteRouteWithChildren
+  '/_protected': typeof ProtectedRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/markets': typeof MarketsRouteRouteWithChildren
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/_main/leaderboard': typeof MainLeaderboardRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/markets/': typeof MarketsIndexRoute
+  '/_protected/account/': typeof ProtectedAccountIndexRoute
   '/markets/$marketId/': typeof MarketsMarketIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -111,36 +141,46 @@ export interface FileRouteTypes {
     | '/markets'
     | '/login'
     | '/signup'
+    | '/leaderboard'
     | '/dashboard/account'
     | '/dashboard/'
     | '/markets/'
+    | '/account'
     | '/markets/$marketId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
+    | '/leaderboard'
     | '/dashboard/account'
     | '/dashboard'
     | '/markets'
+    | '/account'
     | '/markets/$marketId'
   id:
     | '__root__'
     | '/'
     | '/_auth'
+    | '/_main'
+    | '/_protected'
     | '/dashboard'
     | '/markets'
     | '/_auth/login'
     | '/_auth/signup'
+    | '/_main/leaderboard'
     | '/dashboard/account'
     | '/dashboard/'
     | '/markets/'
+    | '/_protected/account/'
     | '/markets/$marketId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  MainRouteRoute: typeof MainRouteRouteWithChildren
+  ProtectedRouteRoute: typeof ProtectedRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   MarketsRouteRoute: typeof MarketsRouteRouteWithChildren
 }
@@ -159,6 +199,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof ProtectedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_main': {
+      id: '/_main'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof MainRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
@@ -196,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAccountRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_main/leaderboard': {
+      id: '/_main/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof MainLeaderboardRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
     '/_auth/signup': {
       id: '/_auth/signup'
       path: '/signup'
@@ -217,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketsMarketIdIndexRouteImport
       parentRoute: typeof MarketsRouteRoute
     }
+    '/_protected/account/': {
+      id: '/_protected/account/'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof ProtectedAccountIndexRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
   }
 }
 
@@ -232,6 +300,30 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
+)
+
+interface MainRouteRouteChildren {
+  MainLeaderboardRoute: typeof MainLeaderboardRoute
+}
+
+const MainRouteRouteChildren: MainRouteRouteChildren = {
+  MainLeaderboardRoute: MainLeaderboardRoute,
+}
+
+const MainRouteRouteWithChildren = MainRouteRoute._addFileChildren(
+  MainRouteRouteChildren,
+)
+
+interface ProtectedRouteRouteChildren {
+  ProtectedAccountIndexRoute: typeof ProtectedAccountIndexRoute
+}
+
+const ProtectedRouteRouteChildren: ProtectedRouteRouteChildren = {
+  ProtectedAccountIndexRoute: ProtectedAccountIndexRoute,
+}
+
+const ProtectedRouteRouteWithChildren = ProtectedRouteRoute._addFileChildren(
+  ProtectedRouteRouteChildren,
 )
 
 interface DashboardRouteRouteChildren {
@@ -265,6 +357,8 @@ const MarketsRouteRouteWithChildren = MarketsRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
+  MainRouteRoute: MainRouteRouteWithChildren,
+  ProtectedRouteRoute: ProtectedRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   MarketsRouteRoute: MarketsRouteRouteWithChildren,
 }
