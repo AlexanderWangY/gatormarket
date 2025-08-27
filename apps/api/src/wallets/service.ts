@@ -1,5 +1,7 @@
 import { db } from "../db/index.js";
 import { getMarketPrices } from "../lmsr/index.js";
+import { getAllPositionsWorth } from "../positions/service.js";
+import { MissingWalletError } from "./errors.js";
 
 interface MarketPnL {
   marketId: string;
@@ -99,10 +101,27 @@ export const getAllUnrealizedPL = async (userId: string, since: Date) => {
   return result;
 };
 
-export const getWalletBalance = async (userId: string) => {
-  return db
+export const getWalletBalanceWithPNL = async (userId: string) => {
+  // Get total_balance = balance - locked_amount
+
+  // Get total positions amount
+  const wallet = await db
     .selectFrom("wallets")
-    .select(["balance", "locked_balance"])
+    .selectAll()
     .where("user_id", "=", userId)
     .executeTakeFirst();
+
+  if (!wallet) {
+    throw new MissingWalletError("Wallet not found for user");
+  }
+
+  const realBalance = Number(wallet.balance) - Number(wallet.locked_balance);
+
+  // Accumulate P&L from all markets
+  const positionsWorth = await getAllPositionsWorth(userId);
+
+  return {
+    ...wallet,
+    totalBalance: (realBalance + positionsWorth) / 100 // Convert to dollars
+  }
 };

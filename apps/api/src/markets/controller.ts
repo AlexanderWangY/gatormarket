@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { GetMarketsQuerySchema } from "./schema.js";
 import { db } from "../db/index.js"; // Node automatically resolves index.js
-import { getProbabilityOfOutcome } from "../lmsr/index.js";
+import { getMarketPrices, getProbabilityOfOutcome } from "../lmsr/index.js";
 
 export const getMarkets = async (req: Request, res: Response) => {
   // Parse query parameters
@@ -62,19 +62,25 @@ export const getMarketOutcomes = async (req: Request, res: Response) => {
       .where("market_id", "=", marketId)
       .execute();
 
-    const outcomesWithProbability = await Promise.all(
-      outcomes.map(async (o, idx) => {
-        const res = await getProbabilityOfOutcome(o.outcome, o.market_id.toString());
+    const { yesPrice, noPrice } =  await getMarketPrices(marketId)
 
-        return {
-          ...o,
-          probability: res,
-        };
-      })
-    );
+    const outcomesWithProbability = outcomes.map((outcome) => {
+      console.log("Calculating probability for outcome:", outcome.outcome);
+      let probability = 0;
+      if (outcome.outcome === "YES") {
+        probability = yesPrice;
+      } else if (outcome.outcome === "NO") {
+        probability = noPrice;
+      }
+      return { ...outcome, probability };
+    });
+
+    console.log("HERE")
 
     return res.status(200).json({ items: outcomesWithProbability });
   } catch (err) {
+    console.error(err);
+
     return res.status(500).json({ error: "Internal server error" });
   }
 };

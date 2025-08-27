@@ -5,6 +5,16 @@ import cors from "cors";
 import { logger } from "./config/logger.js";
 import marketRouter from "./markets/router.js";
 import walletRouter from "./wallets/router.js";
+import type { Session, User } from "better-auth";
+import tradesRouter from "./trades/router.js";
+
+declare global {
+  namespace Express {
+    interface Request {
+      auth?: { user: User, session: Session }
+    }
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -28,6 +38,7 @@ app.get("/", (req, res) => {
 app.use(express.json());
 app.use("/markets", marketRouter);
 app.use("/wallets", walletRouter);
+app.use("/", tradesRouter)
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

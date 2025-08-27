@@ -5,8 +5,8 @@ CREATE TABLE positions (
     outcome_id UUID NOT NULL REFERENCES outcomes(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     shares NUMERIC(20,10) NOT NULL,
-    average_price_per_share NUMERIC(20,10) NOT NULL,
-    realized_pnl NUMERIC(20,10) NOT NULL DEFAULT 0,
+    average_price_per_share INTEGER NOT NULL,
+    realized_pnl INTEGER NOT NULL DEFAULT 0,
     
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

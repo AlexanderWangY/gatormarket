@@ -19,6 +19,10 @@ export type OutcomeOption = "NO" | "YES";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export type TradeTypeEnum = "BUY" | "SELL";
+
+export type TransactionTypeEnum = "ADMIN_ADJUSTMENT" | "ADMIN_RESET" | "BUY" | "SELL" | "SETTLEMENT";
+
 export interface Account {
   accessToken: string | null;
   accessTokenExpiresAt: Timestamp | null;
@@ -95,7 +99,7 @@ export interface Trades {
   outcome_id: string;
   price_per_share: Int8;
   shares: Numeric;
-  trade_type: string;
+  trade_type: TradeTypeEnum;
   user_id: string;
 }
 
@@ -105,7 +109,7 @@ export interface Transactions {
   id: Generated<string>;
   related_outcome_id: string | null;
   trade_id: string | null;
-  transaction_type: string;
+  transaction_type: TransactionTypeEnum;
   updated_at: Generated<Timestamp>;
   user_id: string;
 }

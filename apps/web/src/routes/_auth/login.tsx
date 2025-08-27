@@ -62,7 +62,7 @@ function RouteComponent() {
   }
 
   return (
-    <div className="flex flex-col max-w-xs mx-auto h-screen overflow-hidden items-center justify-center gap-4 relative">
+    <div className="flex flex-col max-w-xs mx-auto h-screen items-center justify-center gap-4 relative">
       <div className="w-full">
         <h1 className="text-lg">Welcome Back</h1>
         <p className="text-neutral-500">Login to your account</p>
