@@ -52,6 +52,9 @@ code {
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.871 0.006 286.286);
+
+  --chart-yes: #22ce2d;
+  --chart-no: #d42121;
 }
 
 .dark {

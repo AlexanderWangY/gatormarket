@@ -44,6 +44,7 @@ export interface GooseDbVersion {
 
 export interface Markets {
   closes_at: Timestamp;
+  course_code: string;
   created_at: Generated<Timestamp>;
   id: Generated<number>;
   liquidity: Generated<Int8>;
@@ -54,6 +55,16 @@ export interface Markets {
   semester: string;
   updated_at: Generated<Timestamp>;
   yes_shares: Generated<Numeric>;
+}
+
+export interface MarketSnapshots {
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  market_id: number;
+  no_price_cents: Int8;
+  no_shares: Numeric;
+  yes_price_cents: Int8;
+  yes_shares: Numeric;
 }
 
 export interface Positions {
@@ -111,6 +122,7 @@ export interface Verification {
 export interface DB {
   account: Account;
   goose_db_version: GooseDbVersion;
+  market_snapshots: MarketSnapshots;
   markets: Markets;
   positions: Positions;
   session: Session;

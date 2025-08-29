@@ -122,7 +122,7 @@ function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      <NavigationMenu className="fixed bottom-0 w-full border-t-2 border-neutral-100 md:hidden">
+      <NavigationMenu className="fixed bottom-0 w-full border-t-2 border-neutral-100 dark:border-neutral-700 md:hidden bg-background">
         <NavigationMenuList className="flex flex-row justify-between px-4">
           <NavigationMenuItem>
             <NavigationMenuLink

@@ -66,4 +66,25 @@ export class MarketService {
 
     return LSMR.price(qYes, qNo, liquidity);
   }
+
+  static async fetchMarketSnapshotsByTimeframe(marketId: number, from?: Date, to?: Date) {
+    let query = db
+      .selectFrom("market_snapshots")
+      .selectAll()
+      .where("market_id", "=", marketId);
+
+    if (from) {
+      query = query.where("created_at", ">=", from);
+    }
+
+    if (to) {
+      query = query.where("created_at", "<=", to);
+    }
+
+    query = query.orderBy("created_at", "asc");
+
+    const snapshots = await query.execute();
+
+    return snapshots;
+  }
 }

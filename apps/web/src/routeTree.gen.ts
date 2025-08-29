@@ -23,6 +23,7 @@ import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as MarketsMarketIdIndexRouteImport } from './routes/markets/$marketId/index'
 import { Route as ProtectedAccountIndexRouteImport } from './routes/_protected/account/index'
+import { Route as MarketsMarketIdTradeSuccessRouteImport } from './routes/markets/$marketId/trade-success'
 
 const MarketsRouteRoute = MarketsRouteRouteImport.update({
   id: '/markets',
@@ -91,6 +92,12 @@ const ProtectedAccountIndexRoute = ProtectedAccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => ProtectedRouteRoute,
 } as any)
+const MarketsMarketIdTradeSuccessRoute =
+  MarketsMarketIdTradeSuccessRouteImport.update({
+    id: '/$marketId/trade-success',
+    path: '/$marketId/trade-success',
+    getParentRoute: () => MarketsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/markets/': typeof MarketsIndexRoute
+  '/markets/$marketId/trade-success': typeof MarketsMarketIdTradeSuccessRoute
   '/account': typeof ProtectedAccountIndexRoute
   '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
@@ -113,6 +121,7 @@ export interface FileRoutesByTo {
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard': typeof DashboardIndexRoute
   '/markets': typeof MarketsIndexRoute
+  '/markets/$marketId/trade-success': typeof MarketsMarketIdTradeSuccessRoute
   '/account': typeof ProtectedAccountIndexRoute
   '/markets/$marketId': typeof MarketsMarketIdIndexRoute
 }
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/markets/': typeof MarketsIndexRoute
+  '/markets/$marketId/trade-success': typeof MarketsMarketIdTradeSuccessRoute
   '/_protected/account/': typeof ProtectedAccountIndexRoute
   '/markets/$marketId/': typeof MarketsMarketIdIndexRoute
 }
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/dashboard/account'
     | '/dashboard/'
     | '/markets/'
+    | '/markets/$marketId/trade-success'
     | '/account'
     | '/markets/$marketId'
   fileRoutesByTo: FileRoutesByTo
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard/account'
     | '/dashboard'
     | '/markets'
+    | '/markets/$marketId/trade-success'
     | '/account'
     | '/markets/$marketId'
   id:
@@ -172,6 +184,7 @@ export interface FileRouteTypes {
     | '/dashboard/account'
     | '/dashboard/'
     | '/markets/'
+    | '/markets/$marketId/trade-success'
     | '/_protected/account/'
     | '/markets/$marketId/'
   fileRoutesById: FileRoutesById
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAccountIndexRouteImport
       parentRoute: typeof ProtectedRouteRoute
     }
+    '/markets/$marketId/trade-success': {
+      id: '/markets/$marketId/trade-success'
+      path: '/$marketId/trade-success'
+      fullPath: '/markets/$marketId/trade-success'
+      preLoaderRoute: typeof MarketsMarketIdTradeSuccessRouteImport
+      parentRoute: typeof MarketsRouteRoute
+    }
   }
 }
 
@@ -342,11 +362,13 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
 
 interface MarketsRouteRouteChildren {
   MarketsIndexRoute: typeof MarketsIndexRoute
+  MarketsMarketIdTradeSuccessRoute: typeof MarketsMarketIdTradeSuccessRoute
   MarketsMarketIdIndexRoute: typeof MarketsMarketIdIndexRoute
 }
 
 const MarketsRouteRouteChildren: MarketsRouteRouteChildren = {
   MarketsIndexRoute: MarketsIndexRoute,
+  MarketsMarketIdTradeSuccessRoute: MarketsMarketIdTradeSuccessRoute,
   MarketsMarketIdIndexRoute: MarketsMarketIdIndexRoute,
 }
 

@@ -1,15 +1,5 @@
-'use client'
-
-import { TrendingUp } from 'lucide-react'
 import { LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   ChartContainer,
   ChartTooltip,
@@ -1023,81 +1013,66 @@ const chartData = [
 const chartConfig = {
   Yes: {
     label: 'Yes',
-    color: 'var(--chart-1)',
+    color: 'var(--chart-yes)',
   },
   No: {
     label: 'No',
-    color: 'var(--chart-2)',
+    color: 'var(--chart-no)',
   },
 } satisfies ChartConfig
 
 export function ChartLine() {
   return (
-    <Card>
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <LineChart
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="timestamp"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  month: 'short',
-                  day: 'numeric',
-                })
-              }
-            />
-            <YAxis
-              type="number"
-              domain={[0, 1]}
-              ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${(value * 100).toFixed(1)}%`}
-            />
-            <ChartTooltip
-              cursor={{
-                stroke: 'var(--color-Yes)',
-                strokeWidth: 1,
-                strokeDasharray: '3 3',
-              }}
-              formatter={(value: number, name: string) => {
-                const config = chartConfig[name as keyof typeof chartConfig]
-                return [
-                  `${(value * 100).toFixed(2)}%`,
-                  config ? config.label : name,
-                ]
-              }}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <Line
-              type="step"
-              dataKey="Yes"
-              stroke="var(--color-Yes)"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              type="step"
-              dataKey="No"
-              stroke="var(--color-No)"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <LineChart data={chartData}>
+      <CartesianGrid vertical={false} />
+      <XAxis
+        dataKey="timestamp"
+        tickLine={false}
+        axisLine={false}
+        tickMargin={8}
+        tickFormatter={(value) =>
+          new Date(value).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            month: 'short',
+            day: 'numeric',
+          })
+        }
+      />
+      <YAxis
+        type="number"
+        domain={[0, 1]}
+        ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]}
+        tickLine={false}
+        axisLine={false}
+        tickFormatter={(value) => `${(value * 100).toFixed(1)}%`}
+      />
+      <ChartTooltip
+        cursor={{
+          stroke: 'var(--color-Yes)',
+          strokeWidth: 1,
+          strokeDasharray: '3 3',
+        }}
+        formatter={(value: number, name: string) => {
+          const config = chartConfig[name as keyof typeof chartConfig]
+          return [`${(value * 100).toFixed(2)}%`, config ? config.label : name]
+        }}
+        content={<ChartTooltipContent indicator="line" />}
+      />
+      <Line
+        type="step"
+        dataKey="Yes"
+        stroke="var(--color-Yes)"
+        strokeWidth={2}
+        dot={false}
+      />
+      <Line
+        type="step"
+        dataKey="No"
+        stroke="var(--color-No)"
+        strokeWidth={2}
+        dot={false}
+      />
+    </LineChart>
   )
 }

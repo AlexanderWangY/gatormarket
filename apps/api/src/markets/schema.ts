@@ -98,3 +98,10 @@ export const DeleteMarketResponseSchema = z.object({
 });
 
 export type DeleteMarketResponse = z.infer<typeof DeleteMarketResponseSchema>;
+
+export const GetMarketSnapshotsBodySchema = z.object({
+  fromTime: z.iso.datetime().optional(),
+  toTime: z.iso.datetime().optional(),
+}).optional()
+
+export type GetMarketSnapshotsBody = z.infer<typeof GetMarketSnapshotsBodySchema>;

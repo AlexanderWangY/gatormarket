@@ -46,11 +46,11 @@ function App() {
         </div>
 
         {/* Right side: Image placeholder */}
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-6xl flex flex-row justify-center">
           <img
-            src="https://64.media.tumblr.com/f0cd9b305c412fbcf9c506023251ca67/tumblr_ooh5y5P3pr1si8vfyo1_500.gif" // Replace with actual image
+            src="/homescreen-animation.gif"
             alt="Gator Market Illustration"
-            className="object-cover"
+            className="object-cover h-112"
           />
         </div>
       </main>

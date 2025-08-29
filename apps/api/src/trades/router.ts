@@ -6,5 +6,6 @@ const router = Router();
 
 router.get("/", requireAuth, () => {})
 router.post("/", requireAuth, TradesController.createTrade);
+router.get("/:id", TradesController.getTradeById);
 
 export default router;

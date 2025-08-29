@@ -38,4 +38,26 @@ export class TradesController {
       return res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  static async getTradeById(req: Request, res: Response) {
+    const tradeId = req.params.id;
+
+    if (!tradeId) {
+      return res.status(400).json({ error: "Trade ID is required" });
+    }
+
+    try {
+      const trade = await TradesService.fetchTradeById(tradeId);
+      return res.json(trade);
+    } catch (e) {
+      if (e instanceof NoResultError) {
+        return res.status(404).json({ error: "Trade not found" });
+      }
+      if (e instanceof Error) {
+        return res.status(500).json({ error: e.message });
+      }
+
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }

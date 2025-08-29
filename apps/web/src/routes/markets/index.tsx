@@ -1,11 +1,18 @@
 import { fetchActiveMarkets } from '@/api/markets'
 import MarketCard from '@/components/MarketCard'
+import { getSession } from '@/lib/auth-client'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 
 export const Route = createFileRoute('/markets/')({
   component: RouteComponent,
+  beforeLoad: async () => {
+    // Fetch auth status
+    const session = await getSession()
+
+    return { session }
+  },
 })
 
 function RouteComponent() {
@@ -57,6 +64,7 @@ function RouteComponent() {
             closes_at={item.closes_at}
             yes_shares={item.yes_shares}
             no_shares={item.no_shares}
+            course_code={item.course_code}
           />
         ))}
       </div>

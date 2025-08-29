@@ -1,4 +1,5 @@
 import { fetchMyPortfolioSummary } from '@/api/portfolio'
+import { formatDollarsWithNoSign } from '@/lib/utils'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_protected/account/')({
@@ -30,7 +31,7 @@ function RouteComponent() {
         <div className="flex flex-col gap-2">
           <p className="text-6xl font-semibold">
             <span className="font-normal text-4xl mr-1">$</span>
-            {(portfolioSummary.totalPortfolioValueCents / 100).toFixed(2)}
+            {formatDollarsWithNoSign(portfolioSummary.totalPortfolioValueCents / 100)}
           </p>
         </div>
       </div>

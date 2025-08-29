@@ -47,14 +47,19 @@ export class TradesService {
       const newYesShares = params.outcome === "YES" ? qYes + sharesDelta : qYes;
       const newNoShares = params.outcome === "NO" ? qNo + sharesDelta : qNo;
 
-      await trx
+      const newMarket = await trx
         .updateTable("markets")
         .set({
           yes_shares: newYesShares,
           no_shares: newNoShares,
         })
         .where("id", "=", params.marketId)
-        .execute();
+        .returning([
+          "markets.liquidity",
+          "markets.no_shares",
+          "markets.yes_shares",
+        ])
+        .executeTakeFirstOrThrow();
 
       // Deduct user balance
       const newBalance = Number(user.balance_cents) - params.amount_cents;
@@ -92,6 +97,25 @@ export class TradesService {
             shares: sql`positions.shares + ${trade.shares}`,
           })
         )
+        .execute();
+
+      // Calculate new market prices
+      const { priceYes, priceNo } = LSMR.price(
+        Number(newMarket.yes_shares),
+        Number(newMarket.no_shares),
+        Number(newMarket.liquidity)
+      );
+
+      // Insert market snapshot
+      await trx
+        .insertInto("market_snapshots")
+        .values({
+          market_id: params.marketId,
+          yes_price_cents: Math.round(priceYes * 100),
+          no_price_cents: Math.round(priceNo * 100),
+          yes_shares: Number(newMarket.yes_shares),
+          no_shares: Number(newMarket.no_shares),
+        })
         .execute();
 
       return trade;
@@ -150,14 +174,19 @@ export class TradesService {
         params.outcome === "YES" ? qYes - params.shares : qYes;
       const newNoShares = params.outcome === "NO" ? qNo - params.shares : qNo;
 
-      await trx
+      const newMarket = await trx
         .updateTable("markets")
         .set({
           yes_shares: newYesShares,
           no_shares: newNoShares,
         })
         .where("id", "=", params.marketId)
-        .execute();
+        .returning([
+          "markets.liquidity",
+          "markets.no_shares",
+          "markets.yes_shares",
+        ])
+        .executeTakeFirstOrThrow();
 
       // Update or delete user position
       const remainingShares = Number(position.shares) - params.shares;
@@ -197,7 +226,36 @@ export class TradesService {
         .returningAll()
         .executeTakeFirstOrThrow();
 
+      // Calculate new market prices
+      const { priceYes, priceNo } = LSMR.price(
+        Number(newMarket.yes_shares),
+        Number(newMarket.no_shares),
+        Number(newMarket.liquidity)
+      );
+
+      // Insert market snapshot
+      await trx
+        .insertInto("market_snapshots")
+        .values({
+          market_id: params.marketId,
+          yes_price_cents: Math.round(priceYes * 100),
+          no_price_cents: Math.round(priceNo * 100),
+          yes_shares: Number(newMarket.yes_shares),
+          no_shares: Number(newMarket.no_shares),
+        })
+        .execute();
+
       return trade;
     });
+  }
+
+  static async fetchTradeById(tradeId: string) {
+    const trade = await db
+      .selectFrom("trades")
+      .selectAll()
+      .where("id", "=", tradeId)
+      .executeTakeFirstOrThrow();
+
+    return trade;
   }
 }
