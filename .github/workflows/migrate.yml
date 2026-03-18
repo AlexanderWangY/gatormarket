@@ -1,0 +1,32 @@
+name: Run DB Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/internal/db/migrations/**'
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Goose Migrate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+
+      - name: Install goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@latest
+
+      - name: Run migrations
+        working-directory: backend/internal/db/migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: goose postgres "$DATABASE_URL" up

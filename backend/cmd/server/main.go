@@ -1,11 +1,15 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
+	"net/http"
 
+	"github.com/AlexanderWangY/gatormarket/backend/internal/api"
 	"github.com/AlexanderWangY/gatormarket/backend/internal/config"
 	"github.com/AlexanderWangY/gatormarket/backend/internal/db"
+	"github.com/AlexanderWangY/gatormarket/backend/internal/repository"
+	"github.com/AlexanderWangY/gatormarket/backend/internal/service"
 )
 
 func main() {
@@ -14,19 +18,28 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	if err := db.RunMigrations(cfg.DatabaseURL); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
-	}
-
-	log.Println("migrations applied successfully")
-
-	ctx := context.Background()
-
 	database := db.NewDB(cfg.DatabaseURL)
 	defer database.Close()
 
-	_ = ctx
-	_ = database
+	// Repositories
+	userRepo := repository.NewUserRepository(database)
+	marketRepo := repository.NewMarketRepository(database)
 
-	// TODO: start HTTP server
+	// Services
+	emailSvc := service.NewEmailService(cfg.ResendAPIKey, "verify@auth.gatormarket.com")
+	authSvc := service.NewAuthService(database, userRepo, emailSvc, cfg.JWTSecret, cfg.BaseURL)
+	marketSvc := service.NewMarketService(marketRepo)
+	userSvc := service.NewUserService(userRepo)
+
+	// Handlers
+	authHandler := api.NewAuthHandler(authSvc)
+	marketHandler := api.NewMarketHandler(marketSvc)
+	userHandler := api.NewUserHandler(userSvc)
+
+	// Router
+	router := api.NewRouter(authHandler, marketHandler, userHandler, cfg.JWTSecret)
+
+	addr := fmt.Sprintf(":%d", cfg.Port)
+	log.Printf("server listening on %s", addr)
+	log.Fatal(http.ListenAndServe(addr, router))
 }
